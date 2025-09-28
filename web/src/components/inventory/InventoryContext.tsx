@@ -64,6 +64,12 @@ const InventoryContext: React.FC = () => {
       case 'custom':
         fetchNui('useButton', { id: (data?.id || 0) + 1, slot: item.slot });
         break;
+      case 'equip':
+        fetchNui('equipItem', { name: item.name, slot: item.slot });
+        break;
+      case 'unequip':
+        fetchNui('unequipItem', { slot: item.slot });
+        break;
     }
   };
 
@@ -89,12 +95,73 @@ const InventoryContext: React.FC = () => {
     }, []);
   };
 
+  const isEquippable = (itemName: string) => {
+    const equipmentItems = [
+      // Primary Weapons
+      'weapon_assaultrifle',
+      'weapon_carbinerifle',
+      'weapon_advancedrifle',
+      'weapon_pumpshotgun',
+      'weapon_sawnoffshotgun',
+
+      // Secondary Weapons
+      'weapon_pistol',
+      'weapon_combatpistol',
+      'weapon_appistol',
+      'weapon_stungun',
+      'weapon_flaregun',
+
+      // Melee Weapons
+      'weapon_knife',
+      'weapon_bat',
+      'weapon_crowbar',
+      'weapon_hammer',
+      'weapon_machete',
+      'weapon_switchblade',
+
+      // Body Armor
+      'bulletproof',
+      'police_vest',
+      'heavy_armor',
+      'light_armor',
+
+      // Bags
+      'backpack',
+      'duffel_bag',
+      'sports_bag',
+      'school_bag',
+
+      // Wallets
+      'wallet',
+      'id_card',
+      'driver_license',
+    ];
+
+    return equipmentItems.includes(itemName);
+  };
+
+  const isEquipped = item?.metadata?.equipped || false;
+
   return (
     <>
       <Menu>
+        {/* Equipment specific actions */}
+        {item && isEquippable(item.name) && (
+          <>
+            {isEquipped ? (
+              <MenuItem onClick={() => handleClick({ action: 'unequip' })} label={Locale.ui_unequip || 'Unequip'} />
+            ) : (
+              <MenuItem onClick={() => handleClick({ action: 'equip' })} label={Locale.ui_equip || 'Equip'} />
+            )}
+          </>
+        )}
+
+        {/* Standard inventory actions */}
         <MenuItem onClick={() => handleClick({ action: 'use' })} label={Locale.ui_use || 'Use'} />
         <MenuItem onClick={() => handleClick({ action: 'give' })} label={Locale.ui_give || 'Give'} />
         <MenuItem onClick={() => handleClick({ action: 'drop' })} label={Locale.ui_drop || 'Drop'} />
+
+        {/* Weapon specific actions */}
         {item && item.metadata?.ammo > 0 && (
           <MenuItem onClick={() => handleClick({ action: 'removeAmmo' })} label={Locale.ui_remove_ammo} />
         )}
@@ -116,6 +183,8 @@ const InventoryContext: React.FC = () => {
               ))}
           </Menu>
         )}
+
+        {/* Custom item buttons */}
         {((item && item.name && Items[item.name]?.buttons?.length) || 0) > 0 && (
           <>
             {item &&
